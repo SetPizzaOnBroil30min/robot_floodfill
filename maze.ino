@@ -1,39 +1,44 @@
 #include <queue>
 #include <iostream>
+#include <array>
 
 #define inf ((float)(_HUGE_ENUF * _HUGE_ENUF))
 using namespace std;
 
 class Maze {
     public:
-        float maze[6][6][6][6] = {1};
+        float maze[6][6] = {};
+        array<array<bool, 4>, 6> noWall = {true};
         int currentposition[2] = {5,5}; // Set in bottom right corner
-        int availablewalls[4] = {}; // Front, Right, Back, Left (needs to be referenced)
+        array<bool, 4> availablewalls = {}; // Front, Right, Back, Left (needs to be referenced)
         queue<int> orientation; // 1 - East, 2 - South, 3 - West, 4 - North
         Maze() {orientation.push(1); orientation.push(2); orientation.push(3); orientation.push(4);}
         
 /*
-representation is always left facing right as forward, mapping is relative
+representation is a relative fixed matrix
 {0, 0}  ------------------------------ 
         |                            |
+        |     X                      |
         |                            |
         |                            |
         |                            |
-        O->                          |
         |                            |
         |                            |
         |                            |
-        |                            |
-        ------------------------------ {26, 26}
+        |                          0 |
+        ------------------------------ {6, 6}
 */
-    void map_maze(int walls[4], int colour) {
+    void aggregate() {
+
+    }
+
+    void map_maze(bool walls[4]) {
         // Update current map with current cell information
         // Colour is 1 - White, 2 - Black, 3 - Green, 4 - Blue, 5 - Purple, 6 - Yellow, 7 - Red
         queue<int> wallDetected;
 
         for (int i = 0; i < 4; i++) {
             wallDetected.push(walls[i]);
-            availablewalls[i] = walls[i];
         }
 
         // Reorder elements relative to orientation
@@ -44,12 +49,19 @@ representation is always left facing right as forward, mapping is relative
             }
         }
 
-        if (maze[currentposition[0] + 1][currentposition[1]] == 0) {maze[currentposition[0] + 1][currentposition[1]] = wallDetected.front(); wallDetected.pop();}
-        if (maze[currentposition[0]][currentposition[1] + 1] == 0) {maze[currentposition[0]][currentposition[1] + 1] = wallDetected.front(); wallDetected.pop();}
-        if (maze[currentposition[0] - 1][currentposition[1]] == 0) {maze[currentposition[0] - 1][currentposition[1]] = wallDetected.front(); wallDetected.pop();}
-        if (maze[currentposition[0]][currentposition[1] - 1] == 0) {maze[currentposition[0]][currentposition[1] - 1] = wallDetected.front(); wallDetected.pop();}            
+        availablewalls[1] = !wallDetected.front(); wallDetected.pop();
+        availablewalls[2] = !wallDetected.front(); wallDetected.pop();
+        availablewalls[3] = !wallDetected.front(); wallDetected.pop();
+        availablewalls[4] = !wallDetected.front(); wallDetected.pop();
 
-        maze[currentposition[0]][currentposition[1]] = colour;
+        bool wallfound;
+        for (int i = 0; i < 4; i++) {
+            if (!availablewalls[i]) {
+                wallfound = true;
+            }
+        }
+
+        noWall[currentposition[0], currentposition[1]] = availablewalls;
     }
 
     void move() {
